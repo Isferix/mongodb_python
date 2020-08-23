@@ -75,8 +75,10 @@ def show(fetch_all=True):
         print(json_string)
 
     # Leer todos los documentos y obtener los datos de a uno
-    for doc in cursor:
-        print(doc)
+    else: 
+        cursor = db.persona.find()
+        for doc in cursor:
+            print(doc)
 
     # Cerrar la conexión con la base de datos
     conn.close()
@@ -160,7 +162,7 @@ if __name__ == '__main__':
     # ------------------------------------------------
     inove_data = find_persona('Inove')
 
-    address = {"address": {"street": "Monroe", "2716": 500}}
+    address = {"address": {"street": "Monroe", "number": 500}}
     update_persona_address('Inove', address)
 
     inove_data = find_persona('Inove')

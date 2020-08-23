@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-SQL Introducción [Python]
+MongoDB [Python]
 Ejercicios de clase
 ---------------------------
 Autor: Inove Coding School
@@ -15,32 +15,24 @@ __author__ = "Inove Coding School"
 __email__ = "alumnos@inove.com.ar"
 __version__ = "1.1"
 
+from myTinymongoLibrary import connect
+
 import json
 
-import tinymongo as tm
-import tinydb
-
 # Bug: https://github.com/schapman1974/tinymongo/issues/58
-class TinyMongoClient(tm.TinyMongoClient):
-    @property
-    def _storage(self):
-        return tinydb.storages.JSONStorage
+
 
 db_name = 'secundaria'
 
 
-def clear():
-    conn = TinyMongoClient()
-    db = conn[db_name]
-
+@connect(db_name)
+def clear(db=None):
     # Eliminar todos los documentos que existan en la coleccion estudiante
     db.estudiante.remove({})
 
-    # Cerrar la conexión con la base de datos
-    conn.close()
 
-
-def fill():
+@connect(db_name)
+def fill(db=None):
     print('Completemos esta tablita!')
     # Llenar la coleccion "estudiante" con al menos 5 estudiantes
     # Cada estudiante tiene los posibles campos:
@@ -51,17 +43,35 @@ def fill():
     # tutor --> nombre de su tutor
 
     # Se debe utilizar la sentencia insert_one o insert_many.
+    group = [
+        {"name" : "Ishef", "age" : 15, "grade" : 5, "tutor" : "Federico Gonzalez"},
+        {"name" : "Francisco", "age" : 14, "grade" : 4, "tutor" : "Celeste Hernandez"},
+        {"name" : "Diego", "age" : 13, "grade" : 3, "tutor" : "Juanjo Martinez"},
+        {"name" : "Mauricio", "age" : 12, "grade" : 2, "tutor" : "Federico Gonzalez"},
+        {"name" : "Maura", "age" : 11, "grade" : 1, "tutor" : "Celeste Hernandez"}
+    ]
+    db.estudiante.insert_many(group)
 
 
-def show():
+@connect(db_name)
+def show(db=None):
     print('Comprovemos su contenido, ¿qué hay en la tabla?')
     # Utilizar la sentencia find para imprimir en pantalla
     # todos los documentos de la DB
     # Queda a su criterio serializar o no el JSON "dumps"
     #  para imprimirlo en un formato más "agradable"
 
+    #conn = TinyMongoClient()
+    #db = conn[db_name]
 
-def find_by_grade(grade):
+    cursor = db.estudiante.find()
+    data = list(cursor)
+    json_string = json.dumps(data, indent=4)
+    print(json_string)
+
+
+@connect(db_name)
+def find_by_grade(grade, db=None):
     print('Operación búsqueda!')
     # Utilizar la sentencia find para imprimir en pantalla
     # aquellos estudiantes que se encuentra en en año "grade"
@@ -69,20 +79,29 @@ def find_by_grade(grade):
     # De la lista de esos estudiantes debe imprimir
     # en pantalla unicamente los siguiente campos por cada uno:
     # id / name / age
-
-
-def insert(student):
+    person_data = db.estudiante.find({"grade": grade})
+    for data in person_data:
+        print(data)
+    
+    
+@connect(db_name)
+def insert(student, db=None):
     print('Nuevos ingresos!')
     # Utilizar la sentencia insert_one para ingresar nuevos estudiantes
     # a la secundaria
 
     # El parámetro student deberá ser un JSON el cual se inserta en la db
+    db.estudiante.insert_one(student)
 
 
-def count(grade):
+@connect(db_name)
+def count(grade, db=None):
     print('Contar estudiantes')
     # Utilizar la sentencia find + count para contar
     # cuantos estudiantes pertenecen el grado "grade"
+    count = db.estudiante.find({"grade": grade}).count()
+    print('Hay {} personas que estan cursando el grado {}'.format(count, grade))
+
 
 
 if __name__ == '__main__':
@@ -90,13 +109,13 @@ if __name__ == '__main__':
     # Borrar la db
     clear()
 
-    # fill()
-    # show()
+    fill()
+    show()
 
     grade = 3
-    # find_by_grade(grade)
+    find_by_grade(grade=grade)
 
-    # student = {....}
-    # insert(student)
+    student = {"name": "Florencia", "age": 16, "grade": 6, "tutor": "Juanjo Martinez"}
+    insert(student=student)
 
-    # count(grade)
+    count(grade=grade)
